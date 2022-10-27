@@ -1,0 +1,12 @@
+CLASS zcl_game_exploration_tests DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+  PRIVATE SECTION.
+ENDCLASS.
+
+
+
+CLASS zcl_game_exploration_tests IMPLEMENTATION.
+ENDCLASS.
