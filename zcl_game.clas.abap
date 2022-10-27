@@ -32,7 +32,9 @@ CLASS zcl_game DEFINITION
     DATA is_getting_out_of_penalty_box TYPE abap_bool.
 
     DATA log TYPE balloghndl.
-    data msg type char256.
+    DATA msg TYPE char256.
+    DATA mo_log TYPE REF TO zif_al2_ws_log.
+
     METHODS create_sport_question
       IMPORTING
         i_index           TYPE i
@@ -51,51 +53,8 @@ ENDCLASS.
 
 CLASS zcl_game IMPLEMENTATION.
 
-
-  METHOD add.
-    FIELD-SYMBOLS <new_entry> LIKE LINE OF gt_players.
-    APPEND INITIAL LINE TO gt_players ASSIGNING <new_entry>.
-    <new_entry> = i_player_name.
-
-    APPEND INITIAL LINE TO gt_places ASSIGNING FIELD-SYMBOL(<place>).
-    <place> = 1.
-
-    APPEND INITIAL LINE TO gt_purses.
-    APPEND INITIAL LINE TO gt_is_in_penalty_box.
-
-    msg = |{ i_player_name } was added. They are player number { lines( gt_players ) }|.
-    log_msg msg.
-
-    r_result = abap_true.
-  ENDMETHOD.
-
-
-  METHOD ask_question.
-    data question like msg.
-    IF get_current_category( ) = 'History'.
-      question = questions-history_questions[ 1 ].
-      DELETE questions-history_questions INDEX 1.
-    ENDIF.
-    IF get_current_category( ) = 'Music'.
-      question = questions-music_questions[ 1 ].
-      DELETE questions-music_questions INDEX 1.
-    ENDIF.
-    IF get_current_category( ) = 'Sport'.
-      question = questions-sport_questions[ 1 ].
-      DELETE questions-sport_questions INDEX 1.
-    ENDIF.
-    IF get_current_category( ) = 'Science'.
-      question = questions-science_questions[ 1 ].
-      DELETE questions-science_questions INDEX 1.
-    ENDIF.
-
-    log_msg question.
-
-  ENDMETHOD.
-
-
   METHOD constructor.
-    DATA lv_game_params type zlacr_game_param.
+    DATA lv_game_params TYPE zlacr_game_param.
     DATA question TYPE string.
     DATA index TYPE n.
 
@@ -124,13 +83,51 @@ CLASS zcl_game IMPLEMENTATION.
 
     me->current_player = 1.
 
-    DATA(s_log) = VALUE bal_s_log( object = 'Z_LACR' subobject = 'Z_GAME' ).
-    CALL FUNCTION 'BAL_LOG_CREATE'
-      EXPORTING
-        i_s_log      = s_log
-      IMPORTING
-        e_log_handle = log.
+    mo_log = NEW zcl_al2_ws_log_bal( ).
   ENDMETHOD.
+
+
+  METHOD add.
+    FIELD-SYMBOLS <new_entry> LIKE LINE OF gt_players.
+    APPEND INITIAL LINE TO gt_players ASSIGNING <new_entry>.
+    <new_entry> = i_player_name.
+
+    APPEND INITIAL LINE TO gt_places ASSIGNING FIELD-SYMBOL(<place>).
+    <place> = 1.
+
+    APPEND INITIAL LINE TO gt_purses.
+    APPEND INITIAL LINE TO gt_is_in_penalty_box.
+
+    msg = |{ i_player_name } was added. They are player number { lines( gt_players ) }|.
+    mo_log->log_msg( msg ).
+
+    r_result = abap_true.
+  ENDMETHOD.
+
+
+  METHOD ask_question.
+    DATA question LIKE msg.
+    IF get_current_category( ) = 'History'.
+      question = questions-history_questions[ 1 ].
+      DELETE questions-history_questions INDEX 1.
+    ENDIF.
+    IF get_current_category( ) = 'Music'.
+      question = questions-music_questions[ 1 ].
+      DELETE questions-music_questions INDEX 1.
+    ENDIF.
+    IF get_current_category( ) = 'Sport'.
+      question = questions-sport_questions[ 1 ].
+      DELETE questions-sport_questions INDEX 1.
+    ENDIF.
+    IF get_current_category( ) = 'Science'.
+      question = questions-science_questions[ 1 ].
+      DELETE questions-science_questions INDEX 1.
+    ENDIF.
+
+    mo_log->log_msg( msg ).
+
+  ENDMETHOD.
+
 
 
   METHOD create_sport_question.
@@ -169,16 +166,16 @@ CLASS zcl_game IMPLEMENTATION.
 
   METHOD roll.
     msg = |{ gt_players[ me->current_player ] } is the current player.'|.
-    log_msg msg.
+    mo_log->log_msg( msg ).
     msg = |They have rolled a { i_roll }.|.
-    log_msg msg.
+    mo_log->log_msg( msg ).
 
     IF gt_is_in_penalty_box[ current_player ] = abap_true.
       IF ( i_roll MOD 2 ) = 0.
         is_getting_out_of_penalty_box = abap_true.
 
         msg = |{ gt_players[ me->current_player ] } is getting out of the penalty box|.
-        log_msg msg.
+        mo_log->log_msg( msg ).
         gt_places[ me->current_player ] = gt_places[ me->current_player ] + i_roll.
 
         IF gt_places[ me->current_player ] > 12.
@@ -186,14 +183,14 @@ CLASS zcl_game IMPLEMENTATION.
         ENDIF.
 
         msg = |{ gt_players[ me->current_player ] }'s new location is { gt_places[ me->current_player ] }|.
-        log_msg msg.
+        mo_log->log_msg( msg ).
         msg = |The category is { get_current_category( ) }|.
-        log_msg msg.
+        mo_log->log_msg( msg ).
         ask_question( ).
 
       ELSE.
         msg = |{ gt_players[ me->current_player ] } is not getting out of the penalty box|.
-        log_msg msg.
+        mo_log->log_msg( msg ).
 
         is_getting_out_of_penalty_box = abap_true.
       ENDIF.
@@ -204,9 +201,9 @@ CLASS zcl_game IMPLEMENTATION.
       ENDIF.
 
       msg = |{ gt_players[ me->current_player ] }'s new location is { gt_places[ me->current_player ] }|.
-      log_msg msg.
+      mo_log->log_msg( msg ).
       msg = |The category is { get_current_category( ) }|.
-      log_msg msg.
+      mo_log->log_msg( msg ).
       ask_question( ).
     ENDIF.
 
@@ -218,11 +215,11 @@ CLASS zcl_game IMPLEMENTATION.
     IF gt_is_in_penalty_box[ current_player ] = abap_true.
       IF is_getting_out_of_penalty_box = abap_true.
         msg = 'Answer was correct!!!!'.
-        log_msg msg.
+        mo_log->log_msg( msg ).
 
         gt_purses[ current_player ] = gt_purses[ current_player ] + 1.
         msg = |{ gt_players[ me->current_player ] } now has { gt_purses[ me->current_player ] } Gold Coins.|.
-        log_msg msg.
+        mo_log->log_msg( msg ).
 
         DATA(winner) = did_player_win( ).
         current_player = current_player + 1.
@@ -243,11 +240,11 @@ CLASS zcl_game IMPLEMENTATION.
     ELSE.
 
       msg = 'Answer was correct!!!!'.
-      log_msg msg.
+      mo_log->log_msg( msg ).
 
       gt_purses[ current_player ] = gt_purses[ current_player ] + 1.
       msg = |{ gt_players[ me->current_player ] } now has { gt_purses[ me->current_player ] } Gold Coins.|.
-      log_msg msg.
+      mo_log->log_msg( msg ).
 
       winner = did_player_win( ).
       current_player = current_player + 1.
@@ -261,11 +258,11 @@ CLASS zcl_game IMPLEMENTATION.
 
 
   METHOD wrong_answer.
-   msg = 'Question was incorrectly answered'.
-   log_msg msg.
+    msg = 'Question was incorrectly answered'.
+    mo_log->log_msg( msg ).
 
-   msg = |{ gt_players[ me->current_player ] } was sent to the penalty box|.
-   log_msg msg.
+    msg = |{ gt_players[ me->current_player ] } was sent to the penalty box|.
+    mo_Log->log_msg( msg ).
 
     gt_is_in_penalty_box[ me->current_player ] = abap_true.
 
