@@ -6,7 +6,7 @@ CLASS zcl_game DEFINITION
   PUBLIC SECTION.
     CONSTANTS game_id TYPE string VALUE 'LACR_1'.
 
-    METHODS constructor.
+    METHODS constructor IMPORTING io_log TYPE REF TO zif_al2_ws_log OPTIONAL.
     METHODS add IMPORTING i_player_name   TYPE string
                 RETURNING VALUE(r_result) TYPE abap_bool.
     METHODS roll IMPORTING i_roll TYPE i.
@@ -83,7 +83,9 @@ CLASS zcl_game IMPLEMENTATION.
 
     me->current_player = 1.
 
-    mo_log = NEW zcl_al2_ws_log_bal( ).
+    mo_log = COND #( WHEN io_log IS SUPPLIED
+                        THEN io_log
+                        ELSE NEW zcl_al2_ws_log_bal( ) ).
   ENDMETHOD.
 
 
@@ -262,7 +264,7 @@ CLASS zcl_game IMPLEMENTATION.
     mo_log->log_msg( msg ).
 
     msg = |{ gt_players[ me->current_player ] } was sent to the penalty box|.
-    mo_Log->log_msg( msg ).
+    mo_log->log_msg( msg ).
 
     gt_is_in_penalty_box[ me->current_player ] = abap_true.
 
