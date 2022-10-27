@@ -1,7 +1,5 @@
 *---------------------------------------------------------------------*
 *    program for:   TABLEFRAME_ZLACR_GAME
-*   generation date: 13.05.2018 at 23:16:16
-*   view maintenance generator version: #001407#
 *---------------------------------------------------------------------*
 FUNCTION TABLEFRAME_ZLACR_GAME         .
 
