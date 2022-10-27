@@ -1,130 +1,180 @@
-CLASS tc_explorative_test DEFINITION FINAL FOR TESTING
+  CLASS tc_explorative_test DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
 
-  PRIVATE SECTION.
-    DATA mo_cut      TYPE REF TO zcl_game.
-    DATA mo_test_log TYPE REF TO zcl_al2_ws_log_test.
+    PRIVATE SECTION.
+      DATA mo_cut      TYPE REF TO zcl_game.
+      DATA mo_test_log TYPE REF TO zcl_al2_ws_log_test.
 
-    METHODS setup.
+      METHODS setup.
 
-    METHODS add_one_player  FOR TESTING.
-    METHODS add_two_players FOR TESTING.
-    METHODS log_impacted_by_die_creation FOR TESTING.
-    METHODS log_impacted_by_anwsr_creation FOR TESTING.
-    METHODS roll_a_die_once FOR TESTING.
-    METHODS roll_a_number_and_win FOR TESTING.
+      METHODS add_one_player                 FOR TESTING.
+      METHODS add_two_players                FOR TESTING.
 
-    METHODS die_gives_expected_numbers FOR TESTING.
+      METHODS log_impacted_by_die_creation   FOR TESTING.
+      METHODS log_impacted_by_anwsr_creation FOR TESTING.
 
-ENDCLASS.
+      METHODS roll_a_die_once                FOR TESTING.
 
-CLASS tc_explorative_test IMPLEMENTATION.
+      METHODS a_right_answer_is_given        FOR TESTING.
+      METHODS a_wrong_answer_is_given        FOR TESTING.
 
-  METHOD setup.
-    mo_test_log = NEW zcl_al2_ws_log_test( ).
-    mo_cut = NEW zcl_game( mo_test_log ).
-  ENDMETHOD.
+      METHODS get_out_of_the_penalty_box     FOR TESTING.
+      METHODS be_a_winner                    FOR TESTING.
 
-  METHOD add_one_player.
-    mo_cut->add( |Johnny| ).
+  ENDCLASS.
 
-    DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
-                                        ( |Johnny was added. They are player number 1| ) ).
+  CLASS tc_explorative_test IMPLEMENTATION.
 
-    cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( ) ).
-  ENDMETHOD.
+    METHOD setup.
+      mo_test_log = NEW zcl_al2_ws_log_test( ).
+      mo_cut = NEW zcl_game( mo_test_log ).
+    ENDMETHOD.
 
-  METHOD add_two_players.
-    mo_cut->add( |Johnny| ).
-    mo_cut->add( |Dee Dee| ).
+    METHOD add_one_player.
+      mo_cut->add( |Johnny| ).
 
-    DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
-                                        ( |Johnny was added. They are player number 1| )
-                                        ( |Dee Dee was added. They are player number 2| ) ).
+      DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
+                                          ( |Johnny was added. They are player number 1| ) ).
 
-    cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( ) ).
-  ENDMETHOD.
+      cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( ) ).
+    ENDMETHOD.
 
-  METHOD log_impacted_by_die_creation.
-    mo_cut->add( |Johnny| ).
+    METHOD add_two_players.
+      mo_cut->add( |Johnny| ).
+      mo_cut->add( |Dee Dee| ).
 
-    DATA(die) = cl_abap_random_int=>create( seed = CONV i( sy-uzeit )
-                                         min  = 1
-                                         max  = 6 ).
+      DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
+                                          ( |Johnny was added. They are player number 1| )
+                                          ( |Dee Dee was added. They are player number 2| ) ).
 
+      cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( ) ).
+    ENDMETHOD.
 
-    DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
-                                        ( |Johnny was added. They are player number 1| ) ).
+    METHOD log_impacted_by_die_creation.
+      mo_cut->add( |Johnny| ).
 
-    cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( ) ).
-  ENDMETHOD.
-
-  METHOD log_impacted_by_anwsr_creation.
-    mo_cut->add( |Johnny| ).
-
-    DATA(die) = cl_abap_random_int=>create( seed = CONV i( sy-uzeit )
-                                         min  = 1
-                                         max  = 6 ).
-
-    DATA(answer) = cl_abap_random_int=>create( seed = CONV i( sy-uzeit )
-                                               min  = 1
-                                               max  = 9 ).
+      DATA(die) = cl_abap_random_int=>create( seed = CONV i( sy-uzeit )
+                                           min  = 1
+                                           max  = 6 ).
 
 
+      DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
+                                          ( |Johnny was added. They are player number 1| ) ).
 
-    DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
-                                        ( |Johnny was added. They are player number 1| ) ).
+      cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( ) ).
+    ENDMETHOD.
 
-    cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( ) ).
-  ENDMETHOD.
+    METHOD log_impacted_by_anwsr_creation.
+      mo_cut->add( |Johnny| ).
 
-  METHOD roll_a_die_once.
-    DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
-                                        ( |Johnny was added. They are player number 1| )
-                                        ( |Johnny is the current player.'| )
-                                        ( |They have rolled a 4.| )
-                                        ( |Johnny's new location is 5| )
-                                        ( |The category is Music| )
-                                        ( |The category is Music| ) ).
+      DATA(die) = cl_abap_random_int=>create( seed = CONV i( sy-uzeit )
+                                           min  = 1
+                                           max  = 6 ).
 
-    mo_cut->add( |Johnny| ).
-    mo_cut->roll( 4 ).
+      DATA(answer) = cl_abap_random_int=>create( seed = CONV i( sy-uzeit )
+                                                 min  = 1
+                                                 max  = 9 ).
 
-    cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( )  ).
-  ENDMETHOD.
 
-  METHOD roll_a_number_and_win.
-    DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
-                                        ( |Johnny was added. They are player number 1| )
-                                        ( |Johnny is the current player.'| )
-                                        ( |They have rolled a 6.| )
-                                        ( |Johnny's new location is 7| )
-                                        ( |The category is Sport| )
-                                        ( |The category is Sport| )
-                                        ( |Answer was correct!!!!| )
-                                        ( |Johnny now has 1 Gold Coins.| ) ).
 
-    mo_cut->add( |Johnny| ).
-    mo_cut->roll( 6 ).
-    mo_cut->was_correctly_answered( ).
+      DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
+                                          ( |Johnny was added. They are player number 1| ) ).
 
-    cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( )  ).
-  ENDMETHOD.
+      cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( ) ).
+    ENDMETHOD.
 
-  ##TODO "Tests can be deleted afterwards
-  METHOD die_gives_expected_numbers.
-    DATA lt_expected_values TYPE STANDARD TABLE OF i WITH EMPTY KEY.
+    METHOD roll_a_die_once.
+      DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
+                                          ( |Johnny was added. They are player number 1| )
+                                          ( |Johnny is the current player.'| )
+                                          ( |They have rolled a 4.| )
+                                          ( |Johnny's new location is 5| )
+                                          ( |The category is Music| )
+                                          ( |The category is Music| ) ).
 
-    lt_expected_values = VALUE #( FOR i = 1 THEN i + 1 UNTIL i = 7
-                                     ( i ) ).
+      mo_cut->add( |Johnny| ).
+      mo_cut->roll( 4 ).
 
-    DATA(lo_die) = cl_abap_random_int=>create( seed = CONV i( sy-uzeit )
-                                          min  = 1
-                                          max  = 6 ).
+      cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( )  ).
+    ENDMETHOD.
 
-    cl_abap_unit_assert=>assert_table_contains( line  = lo_die->get_next( )
-                                                table = lt_expected_values ).
-  ENDMETHOD.
+    METHOD a_right_answer_is_given.
+      DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
+                                          ( |Johnny was added. They are player number 1| )
+                                          ( |Johnny is the current player.'| )
+                                          ( |They have rolled a 6.| )
+                                          ( |Johnny's new location is 7| )
+                                          ( |The category is Sport| )
+                                          ( |The category is Sport| )
+                                          ( |Answer was correct!!!!| )
+                                          ( |Johnny now has 1 Gold Coins.| ) ).
 
-ENDCLASS.
+      mo_cut->add( |Johnny| ).
+      mo_cut->roll( 6 ).
+      mo_cut->was_correctly_answered( ).
+
+      cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( )  ).
+    ENDMETHOD.
+
+    METHOD a_wrong_answer_is_given.
+      DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
+                                          ( |Johnny was added. They are player number 1| )
+                                          ( |Johnny is the current player.'| )
+                                          ( |They have rolled a 6.| )
+                                          ( |Johnny's new location is 7| )
+                                          ( |The category is Sport| )
+                                          ( |The category is Sport| )
+                                          ( |Question was incorrectly answered| )
+                                          ( |Johnny was sent to the penalty box| ) ).
+
+      mo_cut->add( |Johnny| ).
+      mo_cut->roll( 6 ).
+      mo_cut->wrong_answer( ).
+
+      cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( )  ).
+    ENDMETHOD.
+
+    METHOD get_out_of_the_penalty_box.
+      DATA(lt_expected_values) = VALUE zcl_al2_ws_log_test=>tt_log_table(
+                                          ( |Johnny was added. They are player number 1| )
+                                          ( |Johnny is the current player.'| )
+                                          ( |They have rolled a 6.| )
+                                          ( |Johnny's new location is 7| )
+                                          ( |The category is Sport| )
+                                          ( |The category is Sport| )
+                                          ( |Question was incorrectly answered| )
+                                          ( |Johnny was sent to the penalty box| )
+                                          ( |Johnny is the current player.'| )
+                                          ( |They have rolled a 6.| )
+                                          ( |Johnny is getting out of the penalty box| )
+                                          ( |Johnny's new location is 0| )
+                                          ( |The category is Histroy| )
+                                          ( |The category is Histroy| )
+                                          ( |Answer was correct!!!!| )
+                                          ( |Johnny now has 1 Gold Coins.| ) ).
+
+      mo_cut->add( |Johnny| ).
+      mo_cut->roll( 6 ).
+      mo_cut->wrong_answer( ).
+      mo_cut->roll( 6 ).
+      mo_cut->was_correctly_answered( ).
+
+      cl_abap_unit_assert=>assert_equals( exp = lt_expected_values act = mo_test_log->get_log( )  ).
+    ENDMETHOD.
+
+    METHOD be_a_winner.
+      mo_cut->add( |Johnny| ).
+
+      DO 6 TIMES.
+        DATA(not_a_winner) = mo_cut->was_correctly_answered(  ).
+      ENDDO.
+
+      IF NOT ( not_a_winner = abap_true ).
+        data(win) = abap_true.
+      ENDIF.
+
+      cl_abap_unit_assert=>assert_true( act = win ).
+    ENDMETHOD.
+
+  ENDCLASS.
